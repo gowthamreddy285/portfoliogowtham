@@ -1,16 +1,53 @@
-# React + Vite
+# Gowtham Reddy Portfolio
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Personal developer portfolio website showcasing my projects, skills, and experience in software development, AI, web development, and cybersecurity.
 
-Currently, two official plugins are available:
+## 🚀 About Me
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+I am a Computer Science Engineering student passionate about:
 
-## React Compiler
+- Full Stack Web Development
+- Artificial Intelligence & Machine Learning
+- Cybersecurity
+- Data Structures & Algorithms
+- Cloud & AWS
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## 🛠️ Tech Stack
 
-## Expanding the ESLint configuration
+- HTML
+- CSS
+- JavaScript
+- React.js
+- Node.js
+- Express.js
+- MongoDB
+- Python
+- Java
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+## 📂 Featured Projects
+
+### Evalify – AI Mock Interview Platform
+An AI-powered mock interview platform that evaluates answers based on:
+- Grammar
+- Clarity
+- Communication
+- Correctness
+
+### Equipoise – RAG-Based AI Chatbot
+A Retrieval-Augmented Generation (RAG) chatbot that analyzes arguments from both sides and provides balanced responses.
+
+### Disaster Communication System
+A LoRa-based emergency communication system using peer-to-peer multi-hop communication.
+
+## 📫 Contact
+
+- GitHub: https://github.com/gowthamreddy285
+- LinkedIn: www.linkedin.com/in/gowtham-reddy-4171a52a2
+
+## 🌐 Live Demo
+
+Coming Soon...
+
+---
+
+⭐ Feel free to explore my projects and connect with me!
