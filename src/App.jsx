@@ -1,29 +1,54 @@
-import { useEffect, useState } from 'react';
-import { motion, AnimatePresence, useScroll, useSpring } from 'framer-motion';
+import { useEffect, useState, useRef } from 'react';
+import { motion, AnimatePresence, useScroll, useSpring, useMotionValue, useTransform } from 'framer-motion';
 import './index.css';
 
-/* ─── Typewriter ─── */
+/* ─── Text Reveal Animation ─── */
+const TextReveal = ({ text, className, stagger = 0.04 }) => {
+  return (
+    <span className={className}>
+      {text.split('').map((char, i) => (
+        <motion.span
+          key={i}
+          initial={{ opacity: 0, y: 10 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ delay: i * stagger, duration: 0.5 }}
+          viewport={{ once: true }}
+          style={{ display: 'inline-block' }}
+        >
+          {char === ' ' ? '\u00A0' : char}
+        </motion.span>
+      ))}
+    </span>
+  );
+};
+
+/* ─── Enhanced Typewriter ─── */
 const TypewriterText = ({ text }) => {
   const [displayText, setDisplayText] = useState('');
   useEffect(() => {
+    setDisplayText(''); // Reset on text change
     let i = 0;
     const timer = setInterval(() => {
-      if (i < text.length) { setDisplayText((prev) => prev + text.charAt(i)); i++; }
-      else clearInterval(timer);
-    }, 100);
+      if (i < text.length) { 
+        setDisplayText(text.substring(0, i + 1));
+        i++; 
+      } else {
+        clearInterval(timer);
+      }
+    }, 60);
     return () => clearInterval(timer);
   }, [text]);
-  return <span>{displayText}</span>;
+  return <span style={{ fontWeight: 700, letterSpacing: '-0.5px' }}>{displayText}</span>;
 };
 
-/* ─── Floating Orbs ─── */
+/* ─── Enhanced Floating Orbs ─── */
 const FloatingOrbs = () => (
   <div className="orbs-container" aria-hidden="true">
     {[
-      { size: 420, x: '8%',  y: '4%',  color: 'rgba(0,255,136,0.07)', dur: 18 },
-      { size: 300, x: '68%', y: '12%', color: 'rgba(0,195,255,0.05)', dur: 22 },
-      { size: 250, x: '48%', y: '58%', color: 'rgba(0,255,136,0.04)', dur: 26 },
-      { size: 180, x: '82%', y: '68%', color: 'rgba(120,80,255,0.06)', dur: 20 },
+      { size: 420, x: '8%',  y: '4%',  color: 'rgba(0,255,136,0.07)', dur: 18, rotate: 45 },
+      { size: 300, x: '68%', y: '12%', color: 'rgba(0,195,255,0.05)', dur: 22, rotate: -30 },
+      { size: 250, x: '48%', y: '58%', color: 'rgba(0,255,136,0.04)', dur: 26, rotate: 60 },
+      { size: 180, x: '82%', y: '68%', color: 'rgba(120,80,255,0.06)', dur: 20, rotate: -20 },
     ].map((orb, i) => (
       <motion.div
         key={i}
@@ -32,8 +57,14 @@ const FloatingOrbs = () => (
           width: orb.size, height: orb.size,
           left: orb.x, top: orb.y,
           background: `radial-gradient(circle, ${orb.color} 0%, transparent 70%)`,
+          filter: 'blur(40px)',
         }}
-        animate={{ y: [0, -30, 0], x: [0, 15, 0], scale: [1, 1.06, 1] }}
+        animate={{ 
+          y: [0, -40, 0], 
+          x: [0, 20, 0], 
+          scale: [1, 1.08, 1],
+          rotate: [orb.rotate, orb.rotate + 10, orb.rotate],
+        }}
         transition={{ duration: orb.dur, repeat: Infinity, ease: 'easeInOut', delay: i * 2 }}
       />
     ))}
@@ -54,7 +85,43 @@ const ParticleGrid = () => (
   </div>
 );
 
-/* ─── Bottom Nav ─── */
+/* ─── Magnetic Button ─── */
+const MagneticButton = ({ children, onClick, className, ...props }) => {
+  const ref = useRef(null);
+  const [position, setPosition] = useState({ x: 0, y: 0 });
+
+  const handleMouse = (e) => {
+    if (!ref.current) return;
+    const { clientX, clientY } = e;
+    const { left, top, width, height } = ref.current.getBoundingClientRect();
+    const x = clientX - (left + width / 2);
+    const y = clientY - (top + height / 2);
+    setPosition({ x: x * 0.3, y: y * 0.3 });
+  };
+
+  const handleMouseLeave = () => {
+    setPosition({ x: 0, y: 0 });
+  };
+
+  return (
+    <motion.button
+      ref={ref}
+      className={className}
+      onClick={onClick}
+      onMouseMove={handleMouse}
+      onMouseLeave={handleMouseLeave}
+      animate={{ x: position.x, y: position.y }}
+      transition={{ type: 'spring', stiffness: 350, damping: 30, mass: 0.5 }}
+      whileHover={{ scale: 1.05 }}
+      whileTap={{ scale: 0.94 }}
+      {...props}
+    >
+      {children}
+    </motion.button>
+  );
+};
+
+/* ─── Bottom Nav with Enhanced Animations ─── */
 const NAV_ITEMS = [
   {
     id: 'professional', label: 'Home',
@@ -102,15 +169,71 @@ const BottomNav = ({ activePage, setActivePage }) => (
   </motion.nav>
 );
 
-/* ─── Scroll-triggered fade-up ─── */
+/* ─── Enhanced Scroll-triggered fade-up ─── */
 const FadeUp = ({ children, delay = 0 }) => (
   <motion.div
-    initial={{ opacity: 0, y: 40 }}
-    whileInView={{ opacity: 1, y: 0 }}
+    initial={{ opacity: 0, y: 40, filter: 'blur(4px)' }}
+    whileInView={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
     viewport={{ once: true, margin: '-60px' }}
-    transition={{ duration: 0.6, delay, ease: [0.22, 1, 0.36, 1] }}
+    transition={{ duration: 0.7, delay, ease: [0.22, 1, 0.36, 1] }}
   >
     {children}
+  </motion.div>
+);
+
+/* ─── Parallax Scroll ─── */
+const ParallaxScroll = ({ children, offset = 50 }) => {
+  const ref = useRef(null);
+  const { scrollYProgress } = useScroll({ target: ref, offset: ['start end', 'end start'] });
+  const y = useTransform(scrollYProgress, [0, 1], [offset, -offset]);
+  
+  return (
+    <motion.div ref={ref} style={{ y }}>
+      {children}
+    </motion.div>
+  );
+};
+
+/* ─── Interactive Stats Handler ─── */
+const StatsGrid = ({ onStatClick }) => (
+  <motion.div className="stats-row">
+    {[
+      { num: '4+', label: 'Major Projects\nBuilt', id: 'projects' },
+      { num: '5+', label: 'Languages &\nFrameworks', id: 'skills' },
+      { num: '3+', label: 'AI & ML\nSystems', id: 'experience' }
+    ].map((stat, i) => (
+      <motion.button
+        key={stat.id}
+        className="stat-item"
+        onClick={() => onStatClick(stat.id)}
+        whileHover={{ scale: 1.08, y: -8 }}
+        whileTap={{ scale: 0.95 }}
+        initial={{ opacity: 0, y: 20 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true }}
+        transition={{ delay: i * 0.15, duration: 0.5 }}
+        style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0' }}
+      >
+        <motion.span 
+          className="stat-number"
+          initial={{ scale: 0.8, opacity: 0 }}
+          whileInView={{ scale: 1, opacity: 1 }}
+          viewport={{ once: true }}
+          transition={{ delay: i * 0.15 + 0.2, type: 'spring', stiffness: 200 }}
+        >
+          {stat.num}
+        </motion.span>
+        <motion.span 
+          className="stat-label"
+          initial={{ opacity: 0, y: 10 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ delay: i * 0.15 + 0.25 }}
+        >
+          {stat.label}
+        </motion.span>
+      </motion.button>
+    ))}
   </motion.div>
 );
 
@@ -119,6 +242,23 @@ function App() {
   const [activePage, setActivePage] = useState('professional');
   const { scrollYProgress } = useScroll();
   const scaleX = useSpring(scrollYProgress, { stiffness: 100, damping: 30, restDelta: 0.001 });
+  
+  // Handle resume download
+  const handleResumeDownload = () => {
+    const resumePath = '/resume.pdf'; // Place your resume.pdf in public folder
+    const link = document.createElement('a');
+    link.href = resumePath;
+    link.download = 'Gowtham_Resume.pdf';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+  
+  const handleStatClick = (statId) => {
+    if (statId === 'projects') setActivePage('resume');
+    if (statId === 'skills') setActivePage('resume');
+    if (statId === 'experience') setActivePage('resume');
+  };
 
   return (
     <div className="app">
@@ -135,26 +275,46 @@ function App() {
           className="header"
           initial={{ opacity: 0, y: -24 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.1 }}
+          transition={{ duration: 0.6, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
         >
-          <div className="logo">Gowtham <span className="logo-dot"></span></div>
+          <motion.div 
+            className="logo"
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+          >
+            Gowtham <span className="logo-dot"></span>
+          </motion.div>
           <nav className="nav-links">
-            {['professional','contact'].map((page) => (
-              <a key={page} href={`#${page}`} style={{ position: 'relative' }}
+            {['professional','contact'].map((page, idx) => (
+              <motion.a 
+                key={page} 
+                href={`#${page}`} 
+                style={{ position: 'relative' }}
                 className={activePage === page ? 'active text-green' : ''}
                 onClick={(e) => { e.preventDefault(); setActivePage(page); }}
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.3 + idx * 0.1 }}
               >
                 {page.charAt(0).toUpperCase() + page.slice(1)}
                 {activePage === page && (
-                  <motion.div layoutId="nav-pill" style={{ position: 'absolute', bottom: '-4px', left: 0, right: 0, height: '2px', background: 'var(--accent-green)' }} />
+                  <motion.div layoutId="nav-pill" style={{ position: 'absolute', bottom: '-4px', left: 0, right: 0, height: '2px', background: 'var(--accent-green)' }} transition={{ type: 'spring', stiffness: 300, damping: 30 }} />
                 )}
-              </a>
+              </motion.a>
             ))}
-            <button className="lang-btn">
+            <motion.button 
+              className="lang-btn"
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.5, delay: 0.5 }}
+              whileHover={{ scale: 1.08 }}
+              whileTap={{ scale: 0.95 }}
+            >
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
               English
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
-            </button>
+            </motion.button>
           </nav>
         </motion.header>
 
@@ -162,41 +322,50 @@ function App() {
 
           {/* ══ Professional ══ */}
           {activePage === 'professional' && (
-            <motion.div key="professional" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} transition={{ duration: 0.4 }}>
+            <motion.div 
+              key="professional" 
+              initial={{ opacity: 0, y: 40, filter: 'blur(10px)' }} 
+              animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }} 
+              exit={{ opacity: 0, y: -40, filter: 'blur(10px)' }} 
+              transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+            >
 
               {/* Hero */}
-              <section className="hero">
-                <div className="hero-content">
-                  <motion.div className="hero-subtitle" initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.5, delay: 0.25 }}>
-                    Software Engineer &amp; AI Enthusiast
-                  </motion.div>
-                  <motion.h1 className="hero-title" initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.38, ease: [0.22, 1, 0.36, 1] }}>
-                    Hello I'm<br />
-                    <span className="text-green"><TypewriterText text="Gowtham Reddy" /></span>
-                  </motion.h1>
-                  <motion.p className="hero-desc" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.52 }}>
-                    CS Undergraduate @ Amrita Vishwa Vidyapeetham | AI/ML, NLP &amp; Full-Stack Web Development | Passionate about solving practical problems using scalable and intelligent technologies.
-                  </motion.p>
-                  <motion.div className="hero-actions" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.66 }}>
-                    <motion.button className="btn-outline" onClick={() => setActivePage('resume')} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.96 }}>
-                      VIEW CV &gt;
-                    </motion.button>
-                    <div className="social-icons">
-                      {[
-                        { href: 'https://www.linkedin.com/in/gowtham-reddy-peddireddy-5038bb319/', label: 'IN' },
-                        { href: 'https://github.com/gowthamreddy285', label: 'GH' },
-                      ].map((s, i) => (
-                        <motion.a key={s.label} href={s.href} target="_blank" rel="noreferrer" className="social-icon"
-                          whileHover={{ y: -4, rotate: 8 }}
+              <ParallaxScroll offset={80}>
+                <section className="hero">
+                  <div className="hero-content">
+                    <motion.div className="hero-subtitle" initial={{ opacity: 0, x: -30 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.6, delay: 0.2 }}>
+                      Software Engineer &amp; AI Enthusiast
+                    </motion.div>
+                    <motion.h1 className="hero-title" initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, delay: 0.3, ease: [0.22, 1, 0.36, 1] }}>
+                      Hello I'm<br />
+                      <span className="text-green"><TypewriterText text="Gowtham Reddy" /></span>
+                    </motion.h1>
+                    <motion.p className="hero-desc" initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.4 }}>
+                      CS Undergraduate @ Amrita Vishwa Vidyapeetham | AI/ML, NLP &amp; Full-Stack Web Development | Passionate about solving practical problems using scalable and intelligent technologies.
+                    </motion.p>
+                    <motion.div className="hero-actions" initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.5 }}>
+                      <MagneticButton className="btn-outline" onClick={() => setActivePage('resume')}>
+                        VIEW CV &gt;
+                      </MagneticButton>
+                      <div className="social-icons">
+                        {[
+                          { href: 'https://www.linkedin.com/in/gowtham-reddy-peddireddy-5038bb319/', label: 'IN' },
+                          { href: 'https://github.com/gowthamreddy285', label: 'GH' },
+                        ].map((s, i) => (
+                          <motion.a key={s.label} href={s.href} target="_blank" rel="noreferrer" className="social-icon"
+                            whileHover={{ y: -6, rotate: 12, scale: 1.15 }}
+                            whileTap={{ scale: 0.85 }}
+                            initial={{ opacity: 0, scale: 0 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            transition={{ delay: 0.6 + i * 0.08, type: 'spring', stiffness: 250, damping: 20 }}
+                          >{s.label}</motion.a>
+                        ))}
+                        <motion.a href="mailto:gowthamreddy285@gmail.com" className="social-icon"
+                          whileHover={{ y: -6, rotate: 12, scale: 1.15 }}
+                          whileTap={{ scale: 0.85 }}
                           initial={{ opacity: 0, scale: 0 }}
                           animate={{ opacity: 1, scale: 1 }}
-                          transition={{ delay: 0.76 + i * 0.1, type: 'spring', stiffness: 300 }}
-                        >{s.label}</motion.a>
-                      ))}
-                      <motion.a href="mailto:gowthamreddy285@gmail.com" className="social-icon"
-                        whileHover={{ y: -4, rotate: 8 }}
-                        initial={{ opacity: 0, scale: 0 }}
-                        animate={{ opacity: 1, scale: 1 }}
                         transition={{ delay: 0.96, type: 'spring', stiffness: 300 }}
                       >
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
@@ -218,19 +387,11 @@ function App() {
                   </div>
                 </motion.div>
               </section>
+              </ParallaxScroll>
 
               {/* Stats */}
               <FadeUp>
-                <div className="stats-row">
-                  {[['4+','Major Projects\nBuilt'],['5+','Languages &\nFrameworks'],['3+','AI & ML\nSystems']].map(([num, label], i) => (
-                    <motion.div key={i} className="stat-item"
-                      initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.15 }}
-                    >
-                      <span className="stat-number">{num}</span>
-                      <span className="stat-label">{label.replace('\\n','\n')}</span>
-                    </motion.div>
-                  ))}
-                </div>
+                <StatsGrid onStatClick={handleStatClick} />
               </FadeUp>
 
               {/* Bento */}
